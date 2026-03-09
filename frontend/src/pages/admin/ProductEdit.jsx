@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import API from '../../utils/api';
 import { AuthContext } from '../../context/AuthContext';
 import Loader from '../../components/Loader';
 import { toast } from 'react-toastify';
@@ -29,7 +29,7 @@ const ProductEdit = () => {
 
     const fetchProduct = async () => {
       try {
-        const { data } = await axios.get(`/api/products/${id}`);
+        const { data } = await API.get(`/api/products/${id}`);
         setProductName(data.productName);
         setPrice(data.price);
         setImage(data.image);
@@ -54,7 +54,7 @@ const ProductEdit = () => {
 
     try {
       const config = { headers: { 'Content-Type': 'multipart/form-data' } };
-      const { data } = await axios.post('/api/upload', formData, config);
+      const { data } = await API.post('/api/upload', formData, config);
       setImage(data);
       setUploading(false);
       toast.success('Image uploaded successfully');
@@ -68,7 +68,7 @@ const ProductEdit = () => {
     e.preventDefault();
     try {
       const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      await axios.put(
+      await API.put(
         `/api/products/${id}`,
         { productName, price, image, category, description, stockQuantity },
         config

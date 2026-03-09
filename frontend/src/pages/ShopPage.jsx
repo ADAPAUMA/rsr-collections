@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../utils/api';
 import { useLocation } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import Loader from '../components/Loader';
@@ -32,7 +32,7 @@ const ShopPage = () => {
         if (keyword) url += `keyword=${keyword}&`;
         if (category) url += `category=${category}`;
         
-        const { data } = await axios.get(url);
+        const { data } = await API.get(url);
         setProducts(data);
         setLoading(false);
       } catch (error) {
@@ -54,7 +54,7 @@ const ShopPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await axios.get('/api/products/categories');
+        const { data } = await API.get('/api/products/categories');
         setCategories(['All', ...data]);
       } catch (error) {
         console.error('Failed to fetch categories', error);

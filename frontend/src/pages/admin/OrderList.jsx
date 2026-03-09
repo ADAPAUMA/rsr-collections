@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import API from '../../utils/api';
 import { AuthContext } from '../../context/AuthContext';
 import Loader from '../../components/Loader';
 import { FaTimes, FaRupeeSign, FaCheck } from 'react-icons/fa';
@@ -15,7 +15,7 @@ const OrderList = () => {
   const fetchOrders = async () => {
     try {
       const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      const { data } = await axios.get('/api/orders', config);
+      const { data } = await API.get('/api/orders', config);
       setOrders(data);
       setLoading(false);
     } catch (error) {
@@ -34,7 +34,7 @@ const OrderList = () => {
   const updateStatusHandler = async (id, status) => {
     try {
         const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-        await axios.put(`/api/orders/${id}/status`, { status }, config);
+        await API.put(`/api/orders/${id}/status`, { status }, config);
         toast.success(`Order marked as ${status}`);
         fetchOrders();
     } catch(err) {
@@ -46,7 +46,7 @@ const OrderList = () => {
     if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
       try {
         const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-        await axios.delete(`/api/orders/${id}`, config);
+        await API.delete(`/api/orders/${id}`, config);
         toast.success('Order deleted successfully');
         fetchOrders();
       } catch (err) {

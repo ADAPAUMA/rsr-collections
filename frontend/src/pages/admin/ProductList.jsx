@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import API from '../../utils/api';
 import { AuthContext } from '../../context/AuthContext';
 import Loader from '../../components/Loader';
 import { FaEdit, FaTrash, FaPlus, FaImage } from 'react-icons/fa';
@@ -14,7 +14,7 @@ const ProductList = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data } = await axios.get('/api/products');
+      const { data } = await API.get('/api/products');
       setProducts(data);
       setLoading(false);
     } catch (error) {
@@ -34,7 +34,7 @@ const ProductList = () => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-        await axios.delete(`/api/products/${id}`, config);
+        await API.delete(`/api/products/${id}`, config);
         toast.success('Product deleted');
         fetchProducts(); // Refresh
       } catch (error) {
@@ -46,7 +46,7 @@ const ProductList = () => {
   const createProductHandler = async () => {
     try {
       const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      const { data } = await axios.post('/api/products', {}, config);
+      const { data } = await API.post('/api/products', {}, config);
       navigate(`/admin/product/edit/${data._id}`);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Create failed');

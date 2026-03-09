@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import Loader from '../components/Loader';
 import { FaEye, FaTimes } from 'react-icons/fa';
@@ -23,7 +23,7 @@ const UserOrdersPage = () => {
             Authorization: `Bearer ${userInfo.token}`,
           },
         };
-        const { data } = await axios.get('/api/orders/myorders', config);
+        const { data } = await API.get('/api/orders/myorders', config);
         setOrders(data);
         setLoading(false);
       } catch (error) {

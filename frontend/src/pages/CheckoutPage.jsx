@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import API from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { toast } from 'react-toastify';
@@ -57,7 +57,7 @@ const CheckoutPage = () => {
         },
       };
 
-      const { data } = await axios.post('/api/orders', {
+      const { data } = await API.post('/api/orders', {
           orderItems: checkoutItems.map(item => ({
               ...item,
               name: item.productName // Map productName to name for backend schema

@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import API from '../../utils/api';
 import { AuthContext } from '../../context/AuthContext';
 import Loader from '../../components/Loader';
 import { FaBoxOpen, FaClipboardList, FaRupeeSign, FaUsers } from 'react-icons/fa';
@@ -22,7 +22,7 @@ const AdminDashboard = () => {
         const config = {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         };
-        const { data } = await axios.get('/api/orders/analytics', config);
+        const { data } = await API.get('/api/orders/analytics', config);
         setStats(data);
         setLoading(false);
       } catch (error) {
