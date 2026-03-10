@@ -129,12 +129,9 @@ const ProductEdit = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-gray-400 mb-2">Category <span className="text-red-400">*</span></label>
-              <select required className="input-field"
-                value={category} onChange={(e) => setCategory(e.target.value)}>
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+              <input type="text" required className="input-field"
+                placeholder="e.g. Bangles, Chains, Rings, Earrings"
+                value={category} onChange={(e) => setCategory(e.target.value)} />
             </div>
             <div>
               <label className="block text-gray-400 mb-2">Stock Quantity <span className="text-red-400">*</span></label>
