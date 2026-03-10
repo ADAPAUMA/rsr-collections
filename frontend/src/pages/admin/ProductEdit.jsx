@@ -1,10 +1,12 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import API from '../../utils/api';
 import { AuthContext } from '../../context/AuthContext';
 import Loader from '../../components/Loader';
 import { toast } from 'react-toastify';
 import { FaArrowLeft, FaCloudUploadAlt, FaImage } from 'react-icons/fa';
+
+const CATEGORIES = ['Bangles', 'Chains', 'Rings', 'Earrings', 'Jewelry Accessories'];
 
 const ProductEdit = () => {
   const { id } = useParams();
@@ -17,7 +19,6 @@ const ProductEdit = () => {
   const [category, setCategory] = useState('Bangles');
   const [stockQuantity, setStockQuantity] = useState(0);
   const [description, setDescription] = useState('');
-
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
@@ -26,14 +27,13 @@ const ProductEdit = () => {
       navigate('/login');
       return;
     }
-
     const fetchProduct = async () => {
       try {
-        const { data } = await axios.get(`/api/products/${id}`);
+        const { data } = await API.get(`/api/products/${id}`);
         setProductName(data.productName);
         setPrice(data.price);
         setImage(data.image);
-        setCategory(data.category);
+        setCategory(data.category || 'Bangles');
         setStockQuantity(data.stockQuantity);
         setDescription(data.description);
         setLoading(false);
@@ -42,7 +42,6 @@ const ProductEdit = () => {
         toast.error('Product not found');
       }
     };
-
     fetchProduct();
   }, [id, userInfo, navigate]);
 
@@ -55,7 +54,8 @@ const ProductEdit = () => {
     setUploading(true);
 
     try {
-      const { data } = await axios.post('/api/upload', formData, {
+      // Use API wrapper so the Render URL is used in production
+      const { data } = await API.post('/api/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${userInfo.token}`,
@@ -66,22 +66,21 @@ const ProductEdit = () => {
       toast.success('✅ Image uploaded successfully!');
     } catch (error) {
       setUploading(false);
-      toast.error(error.response?.data?.message || 'Image upload failed');
+      toast.error(error.response?.data?.message || 'Image upload failed. Check Cloudinary settings on Render.');
     }
   };
 
   const submitHandler = async (e) => {
     e.preventDefault();
     if (!image) {
-      toast.error('Please upload a product image');
+      toast.error('Please upload a product image first');
       return;
     }
     try {
-      const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      await axios.put(
+      await API.put(
         `/api/products/${id}`,
         { productName, price, image, category, description, stockQuantity },
-        config
+        { headers: { Authorization: `Bearer ${userInfo.token}` } }
       );
       toast.success('✅ Product updated successfully!');
       navigate('/admin/products');
@@ -102,73 +101,59 @@ const ProductEdit = () => {
         <h1 className="text-3xl font-serif text-primary mb-8 border-b border-gray-700 pb-4">Edit Product</h1>
 
         <form onSubmit={submitHandler} className="space-y-6">
+          {/* Name & Price */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-gray-400 mb-2">Product Name <span className="text-red-400">*</span></label>
               <input
-                type="text"
-                required
-                className="input-field"
+                type="text" required className="input-field"
                 placeholder="e.g. Gold Bridal Bangle"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
+                value={productName} onChange={(e) => setProductName(e.target.value)}
               />
             </div>
             <div>
               <label className="block text-gray-400 mb-2">Price (in ₹) <span className="text-red-400">*</span></label>
               <input
-                type="number"
-                required
-                min="0"
-                className="input-field"
+                type="number" required min="0" className="input-field"
                 placeholder="e.g. 15000"
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
+                value={price} onChange={(e) => setPrice(Number(e.target.value))}
               />
             </div>
           </div>
 
+          {/* Category & Stock */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-gray-400 mb-2">Category <span className="text-red-400">*</span></label>
               <select
-                required
-                className="input-field"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                required className="input-field"
+                value={category} onChange={(e) => setCategory(e.target.value)}
               >
-                <option value="Bangles">Bangles</option>
-                <option value="Chains">Chains</option>
-                <option value="Rings">Rings</option>
-                <option value="Earrings">Earrings</option>
-                <option value="Jewelry Accessories">Jewelry Accessories</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
               </select>
             </div>
             <div>
               <label className="block text-gray-400 mb-2">Stock Quantity <span className="text-red-400">*</span></label>
               <input
-                type="number"
-                required
-                min="0"
-                className="input-field"
-                value={stockQuantity}
-                onChange={(e) => setStockQuantity(Number(e.target.value))}
+                type="number" required min="0" className="input-field"
+                value={stockQuantity} onChange={(e) => setStockQuantity(Number(e.target.value))}
               />
             </div>
           </div>
 
+          {/* Description */}
           <div>
             <label className="block text-gray-400 mb-2">Description <span className="text-red-400">*</span></label>
             <textarea
-              required
-              className="input-field h-32 resize-none"
+              required className="input-field h-32 resize-none"
               placeholder="Describe the product..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={description} onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          {/* Image Upload Section */}
+          {/* Image Upload */}
           <div>
             <label className="block text-gray-400 mb-3">Product Image <span className="text-red-400">*</span></label>
             <div className="border-2 border-dashed border-gray-600 hover:border-primary rounded-lg p-6 transition-colors">
@@ -176,11 +161,7 @@ const ProductEdit = () => {
                 {/* Preview */}
                 <div className="w-36 h-36 flex-shrink-0 rounded-lg border border-gray-700 bg-dark flex items-center justify-center overflow-hidden">
                   {image ? (
-                    <img
-                      src={image}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                   ) : (
                     <FaImage className="text-gray-600 text-4xl" />
                   )}
@@ -189,16 +170,12 @@ const ProductEdit = () => {
                 <div className="flex-1 text-center md:text-left">
                   <FaCloudUploadAlt className="text-primary text-4xl mx-auto md:mx-0 mb-3" />
                   <p className="text-white font-medium mb-1">Click to upload product image</p>
-                  <p className="text-gray-500 text-sm mb-4">Supports: JPG, JPEG, PNG, WEBP (Max 10MB)</p>
-                  <label
-                    htmlFor="image-upload"
-                    className="cursor-pointer btn-outline py-2 px-6 inline-block"
-                  >
+                  <p className="text-gray-500 text-sm mb-4">Supports: JPG, PNG, WEBP (Max 10MB)</p>
+                  <label htmlFor="image-upload" className="cursor-pointer btn-outline py-2 px-6 inline-block">
                     {uploading ? 'Uploading...' : 'Choose Image'}
                   </label>
                   <input
-                    id="image-upload"
-                    type="file"
+                    id="image-upload" type="file"
                     accept="image/jpg,image/jpeg,image/png,image/webp"
                     onChange={uploadFileHandler}
                     className="hidden"
@@ -210,17 +187,16 @@ const ProductEdit = () => {
               {uploading && (
                 <div className="mt-4 flex items-center gap-2 text-primary">
                   <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary"></div>
-                  <span className="text-sm">Uploading image to server...</span>
+                  <span className="text-sm">Uploading to Cloudinary...</span>
                 </div>
               )}
-
               {image && !uploading && (
-                <p className="mt-3 text-green-400 text-sm">✅ Image uploaded: {image}</p>
+                <p className="mt-3 text-green-400 text-sm truncate">✅ Image ready: {image}</p>
               )}
             </div>
           </div>
 
-          <button type="submit" className="btn-primary py-3 px-8 text-lg w-full md:w-auto mt-4">
+          <button type="submit" className="btn-primary py-3 px-8 text-lg w-full md:w-auto">
             Update Product
           </button>
         </form>
