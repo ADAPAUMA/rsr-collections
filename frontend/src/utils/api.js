@@ -1,11 +1,8 @@
 import axios from 'axios';
 
-// In production, point directly to Render backend
-// In development, Vite proxy handles it so we use relative URLs
+// Use VITE_API_URL from .env in production, empty string (Vite proxy) in dev
 const API = axios.create({
-  baseURL: import.meta.env.PROD 
-    ? 'https://rsr-collections.onrender.com' 
-    : '',
+  baseURL: import.meta.env.VITE_API_URL || '',
 });
 
 export default API;
