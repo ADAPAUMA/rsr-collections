@@ -4,8 +4,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import { PrivateRoute, AdminRoute } from './components/ProtectedRoute';
 
-// Placeholder Pages, to be created
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
@@ -13,7 +13,6 @@ import CartPage from './pages/CartPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-
 import CheckoutPage from './pages/CheckoutPage';
 import OrderPage from './pages/OrderPage';
 import UserOrdersPage from './pages/UserOrdersPage';
@@ -32,6 +31,7 @@ function App() {
         <Navbar />
         <main className="flex-grow pt-4">
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/product/:id" element={<ProductPage />} />
@@ -39,17 +39,19 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/order/:id" element={<OrderPage />} />
-            <Route path="/orders" element={<UserOrdersPage />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/products" element={<ProductList />} />
-            <Route path="/admin/product/edit/:id" element={<ProductEdit />} />
-            <Route path="/admin/orders" element={<OrderList />} />
-            
-            {/* Catch-all Not Found Page */}
+
+            {/* Protected User Routes */}
+            <Route path="/checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
+            <Route path="/order/:id" element={<PrivateRoute><OrderPage /></PrivateRoute>} />
+            <Route path="/orders" element={<PrivateRoute><UserOrdersPage /></PrivateRoute>} />
+
+            {/* Protected Admin Routes */}
+            <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/products" element={<AdminRoute><ProductList /></AdminRoute>} />
+            <Route path="/admin/product/edit/:id" element={<AdminRoute><ProductEdit /></AdminRoute>} />
+            <Route path="/admin/orders" element={<AdminRoute><OrderList /></AdminRoute>} />
+
+            {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
