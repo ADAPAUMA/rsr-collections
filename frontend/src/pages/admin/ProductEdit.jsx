@@ -10,7 +10,7 @@ const CATEGORIES = ['Bangles', 'Chains', 'Rings', 'Earrings', 'Jewelry Accessori
 
 // Cloudinary unsigned upload - no backend needed
 // User must create an unsigned upload preset named 'rsr-collections-upload' in Cloudinary dashboard
-const CLOUDINARY_CLOUD_NAME = 'uma';
+const CLOUDINARY_CLOUD_NAME = 'ddufsz702';
 const CLOUDINARY_UPLOAD_PRESET = 'rsr_unsigned';
 
 const ProductEdit = () => {
