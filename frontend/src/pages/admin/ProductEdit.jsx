@@ -8,6 +8,11 @@ import { FaArrowLeft, FaCloudUploadAlt, FaImage } from 'react-icons/fa';
 
 const CATEGORIES = ['Bangles', 'Chains', 'Rings', 'Earrings', 'Jewelry Accessories'];
 
+// Cloudinary unsigned upload - no backend needed
+// User must create an unsigned upload preset named 'rsr-collections-upload' in Cloudinary dashboard
+const CLOUDINARY_CLOUD_NAME = 'uma';
+const CLOUDINARY_UPLOAD_PRESET = 'rsr_unsigned';
+
 const ProductEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -45,28 +50,33 @@ const ProductEdit = () => {
     fetchProduct();
   }, [id, userInfo, navigate]);
 
+  // Upload directly from browser to Cloudinary using unsigned preset
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    const formData = new FormData();
-    formData.append('image', file);
     setUploading(true);
 
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('folder', 'rsr-collections');
+
     try {
-      // Use API wrapper so the Render URL is used in production
-      const { data } = await API.post('/api/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      });
-      setImage(data);
-      setUploading(false);
-      toast.success('✅ Image uploaded successfully!');
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: 'POST', body: formData }
+      );
+      const data = await response.json();
+      if (data.secure_url) {
+        setImage(data.secure_url);
+        toast.success('✅ Image uploaded successfully!');
+      } else {
+        throw new Error(data.error?.message || 'Upload failed');
+      }
     } catch (error) {
+      toast.error('Image upload failed: ' + error.message);
+    } finally {
       setUploading(false);
-      toast.error(error.response?.data?.message || 'Image upload failed. Check Cloudinary settings on Render.');
     }
   };
 
@@ -101,34 +111,26 @@ const ProductEdit = () => {
         <h1 className="text-3xl font-serif text-primary mb-8 border-b border-gray-700 pb-4">Edit Product</h1>
 
         <form onSubmit={submitHandler} className="space-y-6">
-          {/* Name & Price */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-gray-400 mb-2">Product Name <span className="text-red-400">*</span></label>
-              <input
-                type="text" required className="input-field"
+              <input type="text" required className="input-field"
                 placeholder="e.g. Gold Bridal Bangle"
-                value={productName} onChange={(e) => setProductName(e.target.value)}
-              />
+                value={productName} onChange={(e) => setProductName(e.target.value)} />
             </div>
             <div>
               <label className="block text-gray-400 mb-2">Price (in ₹) <span className="text-red-400">*</span></label>
-              <input
-                type="number" required min="0" className="input-field"
+              <input type="number" required min="0" className="input-field"
                 placeholder="e.g. 15000"
-                value={price} onChange={(e) => setPrice(Number(e.target.value))}
-              />
+                value={price} onChange={(e) => setPrice(Number(e.target.value))} />
             </div>
           </div>
 
-          {/* Category & Stock */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-gray-400 mb-2">Category <span className="text-red-400">*</span></label>
-              <select
-                required className="input-field"
-                value={category} onChange={(e) => setCategory(e.target.value)}
-              >
+              <select required className="input-field"
+                value={category} onChange={(e) => setCategory(e.target.value)}>
                 {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
@@ -136,54 +138,43 @@ const ProductEdit = () => {
             </div>
             <div>
               <label className="block text-gray-400 mb-2">Stock Quantity <span className="text-red-400">*</span></label>
-              <input
-                type="number" required min="0" className="input-field"
-                value={stockQuantity} onChange={(e) => setStockQuantity(Number(e.target.value))}
-              />
+              <input type="number" required min="0" className="input-field"
+                value={stockQuantity} onChange={(e) => setStockQuantity(Number(e.target.value))} />
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-gray-400 mb-2">Description <span className="text-red-400">*</span></label>
-            <textarea
-              required className="input-field h-32 resize-none"
+            <textarea required className="input-field h-32 resize-none"
               placeholder="Describe the product..."
-              value={description} onChange={(e) => setDescription(e.target.value)}
-            />
+              value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
 
-          {/* Image Upload */}
+          {/* Image Upload - Direct to Cloudinary */}
           <div>
             <label className="block text-gray-400 mb-3">Product Image <span className="text-red-400">*</span></label>
             <div className="border-2 border-dashed border-gray-600 hover:border-primary rounded-lg p-6 transition-colors">
               <div className="flex flex-col md:flex-row items-center gap-6">
-                {/* Preview */}
                 <div className="w-36 h-36 flex-shrink-0 rounded-lg border border-gray-700 bg-dark flex items-center justify-center overflow-hidden">
                   {image ? (
-                    <img src={image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                    <img src={image} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
                     <FaImage className="text-gray-600 text-4xl" />
                   )}
                 </div>
-
                 <div className="flex-1 text-center md:text-left">
                   <FaCloudUploadAlt className="text-primary text-4xl mx-auto md:mx-0 mb-3" />
-                  <p className="text-white font-medium mb-1">Click to upload product image</p>
+                  <p className="text-white font-medium mb-1">Upload product image to Cloudinary</p>
                   <p className="text-gray-500 text-sm mb-4">Supports: JPG, PNG, WEBP (Max 10MB)</p>
                   <label htmlFor="image-upload" className="cursor-pointer btn-outline py-2 px-6 inline-block">
                     {uploading ? 'Uploading...' : 'Choose Image'}
                   </label>
-                  <input
-                    id="image-upload" type="file"
+                  <input id="image-upload" type="file"
                     accept="image/jpg,image/jpeg,image/png,image/webp"
                     onChange={uploadFileHandler}
-                    className="hidden"
-                    disabled={uploading}
-                  />
+                    className="hidden" disabled={uploading} />
                 </div>
               </div>
-
               {uploading && (
                 <div className="mt-4 flex items-center gap-2 text-primary">
                   <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary"></div>
@@ -191,7 +182,7 @@ const ProductEdit = () => {
                 </div>
               )}
               {image && !uploading && (
-                <p className="mt-3 text-green-400 text-sm truncate">✅ Image ready: {image}</p>
+                <p className="mt-3 text-green-400 text-sm truncate">✅ Image ready</p>
               )}
             </div>
           </div>
